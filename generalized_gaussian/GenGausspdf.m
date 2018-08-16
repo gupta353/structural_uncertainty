@@ -29,14 +29,15 @@ minlen=min(length(strmsim),length(strmobs));
 strmsim=strmsim(1:minlen)';
 strmobs_temp=strmobs(1:minlen);
 err=errcompute(strmobs_temp,strmsim);  %% computation of error vector
-err(1)=[];
+% err(1)=[];
 % 
 n=length(err);
 Ct=CovarianceMatrixEstimation(C,theta,sigmaobs2,GLOBAL_DATA,GEOMORPH);
-fac=n*gamma(n/2/beta)/(2^(1/beta)*gamma((n+2)/2/beta));
-sigma=Ct*fac;
+log_fac=log(n)+log(gamma(n/2/beta))-(1/beta)*log(2)-log(gamma((n+2)/2/beta));
+sigma=Ct;
 sigma=sigma(1:n,1:n);
-k=n*gamma(n/2)/pi^(n/2)/gamma(1+(n/2/beta))/2^(1+(n/2/beta));
+log_k=log(n)+log(gamma(n/2))-(n/2)*log(pi)-log(gamma(1+(n/2/beta)))-(1+(n/2/beta))*log(2);
+sigmadet=det(sigma);
 
-pdf=log(k)-0.5*log(det(Ct))-0.5*log(fac)-0.5*(err'*(sigma\err))^beta;
+pdf=log_k-0.5*log(sigmadet)-0.5*n*log_fac-0.5*(err'*(sigma\err))^beta;
 end
