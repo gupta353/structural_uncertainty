@@ -1,7 +1,7 @@
 % WATERSHED GEOMORPHOLOGY
 % User inputs: wt=watershed-topology matrix
-%              ddrain_area=direct-drainage area of each link (units??????)
-%              length_link=length of each of the links (units????????)
+%              ddrain_area=direct-drainage area of each link (in Hectare)
+%              length_link=length of each of the links (in meters)
 %              save_dir=directory in which the output text-files have to be
 %              saved
 % wt: User has to define a watershed topology matrix (wt), Each row of wt
@@ -12,18 +12,30 @@
 % For example, suppose path-i consists of link-numbers 1, 2 and 4, then 
 % ith row of wt would contain ones in 1st, 2nd and 4th columns and rest 
 % of the entries of the wt would be zero.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% This routine
+% Outputs: GEOMORPH=a structure array of that contains
+%                   wt=user input watershed-topology matrix
+%                   RTD=residence time-distribution in each reach which is
+%                   assumed to 'expoenntial' (other RTDs not allowed)
+%                   net=river network as a tree
+%                   node_net=netwrok of nodes as a tree
+%                   link_net=network of links as a tree
+%                   strahler_order=strahler order of each link
+%                   ddrain_area=direct-drainage area of each link (in Hectares)
+%                   pathPoints=
+%                   length_link=length of each of the links (in meters)
+%                   length_num_mat:
+%                   length_num_mat(:,1)=strahler-order 
+%                   length_num_mat(:,2)=number of streams of that order;
+%                   length_num_mat(:,3)=total length of streams of that order;
+%                   length_num_mat(:,4)=average length;
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Except above mentioned outputs this routine
 % (1) plots the tree-representation of the link-network of the watershed
 % and asigns a number to each of it's nodes
-% (2) computes the strahler order of each of the link and identifies streams of
-% each order and saves a text-file which contains strahler-order of reaches
-% of each subasin
-% (3) computes average length of the streams of each order
-% (length_num_mat(:,4)) and saves a text file conatining the output
-% (4) Computes Horton's bifurcation ratio (Rb) and save it in a text-file
-% (5) saves a text-file containing links draining into each node
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% (2) saves a text file conatining the output length_num_mat into directory 'save_dir'
+% (4) Computes Horton's bifurcation ratio (Rb) and save it in a text-file into directory 'save_dir'
+% (5) saves a text-file containing links draining into each node into directory 'save_dir'
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Notes and caution: 
 % (1) tempsum in section 'tree structure' should be either 'numpaths' or
 %     'numpaths-1'; automate the selection
@@ -70,7 +82,20 @@ for linkind=1:size(wt,2)
         find(wt(:,linkind)==1);
 end
 linkPaths=linkPaths';
-
+%% error messages
+wt_err=wt;
+wt_err(wt_err==1)=0;
+sum_err=sum(wt(:,1:end-1),1);
+sum_err(sum_err<numPaths)=0;
+num_unique_paths=unique(wt,'rows');
+if ~isempty(find(wt)~=0)
+    error('atleast one of the entries in wt matrix is neither zero nor one');
+elseif ~isempty(sum_err~=0)
+    error(['atleast one of the links except the most downstreamis common' ...
+    'to all the paths which is physically impossible']);
+elseif num_unique_paths<numPaths
+    error('atleast one of the path has been specified more than once in wt matrix');
+end
 %% tree structure (output variable=net)
 s=sum(wt,1);                         % number of paths shared by each link
 tempsum=numPaths;
@@ -303,5 +328,4 @@ GEOMORPH.ddrain_area=ddrain_area;
 GEOMORPH.pathPoints=pathPoints;
 GEOMORPH.length_link=length_link;
 GEOMORPH.length_num_mat=length_num_mat;
-
 end

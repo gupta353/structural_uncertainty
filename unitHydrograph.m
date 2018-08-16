@@ -7,11 +7,14 @@
 %        vel_stream=drift velocity in streams (1-10 m/s)
 %        vel_hillslope=drift velocity in hillslopes(about vel_stream/10)
 %        support=time-length for which uh is to be computed (at seconds-scale)
+%        GEOMORPH=a structure array geomorphology of the watershed (look at
+%        the mainScript.m documentation for details)
+%        GLOBAL_DATA=a structure array containing user-provided path
+%        'save_dir' to directory where text files have to be saved
 % output:uh=unit-hydrograph values at time-steps
 
-function [uh]=unitHydrograph(node,vel_stream,vel_hillslope,support,GEOMORPH)
-save_dir=['D:\Research\Thesis_work\Structural_uncertainty'...
-    '\MatLab_codes\20180222\huc_0712000408'];
+function [uh]=unitHydrograph(node,vel_stream,vel_hillslope,support,GEOMORPH,GLOBAL_DATA)
+
 net=GEOMORPH.net;
 node_net=GEOMORPH.node_net;
 link_net=GEOMORPH.link_net;
@@ -20,6 +23,9 @@ ddrain_area=GEOMORPH.ddrain_area;
 length_link=GEOMORPH.length_link;
 length_num_mat=GEOMORPH.length_num_mat;
 wt=GEOMORPH.wt;
+
+save_dir=GLOBAL_DATA.save_dir;
+
 persistent nodeGeo p avail_trans s_order_max ddensity
 if isempty(avail_trans)
     %% error messages

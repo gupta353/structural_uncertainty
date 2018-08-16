@@ -1,12 +1,11 @@
 %%% Estimation of streamflow by convolution of rainfall and instantanous unit hydrograph
-% inputs: uh=instantanous unit hydrograph at point of observation/simulation (values at every second)
-%         R=rainfall time-series (in mm)
-%         darea=draiange area of the point of observation/simulation (in hectares)
-%         time_scale=a string with value either 'hourly' (for hourly
-%         rainfall data) or 'daily' (for daily rainfall data)
-%         support=time-length at which instantaneous unit-hydrograph would
-%         be computed (at seconds-scale)
-% output: streamflow=daily average streamflow in m^3/s
+% inputs: GLOBAL_DATA=a structure array user provided data (look at run.m for more details)
+%        GEOMORPH=a structure array geomorphology of the watershed (look at
+%        the mainScript.m documentation for details)
+% output: streamflow=average streamflow in m^3/s at scale provided in
+%                    GLOBAL_data
+%         uh=instantanous unit hydrograph at point of
+%            observation/simulation (at every second)
 
 function [streamflow,uh]=hydrograph(theta,GLOBAL_DATA,GEOMORPH)
 
@@ -19,7 +18,7 @@ S_time_scale=GLOBAL_DATA.S_time_scale;
 
 vel_stream=theta(1);
 vel_hillslope=theta(2);
-uh=unitHydrograph(node,vel_stream,vel_hillslope,support,GEOMORPH);
+uh=unitHydrograph(node,vel_stream,vel_hillslope,support,GEOMORPH,GLOBAL_DATA);
 
 % if strcmpi(time_scale,'hourly')
 %     Tr=3600; % for hourly rainfall data 
