@@ -87,10 +87,10 @@ wt_err=wt;
 wt_err(wt_err==1)=0;
 sum_err=sum(wt(:,1:end-1),1);
 sum_err(sum_err<numPaths)=0;
-num_unique_paths=unique(wt,'rows');
-if ~isempty(find(wt)~=0)
+num_unique_paths=size(unique(wt,'rows'),1);
+if ~isempty(find(wt_err))
     error('atleast one of the entries in wt matrix is neither zero nor one');
-elseif ~isempty(sum_err~=0)
+elseif ~isempty(find(sum_err))
     error(['atleast one of the links except the most downstreamis common' ...
     'to all the paths which is physically impossible']);
 elseif num_unique_paths<numPaths
