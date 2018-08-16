@@ -22,7 +22,7 @@ strmobs=GLOBAL_DATA.strmobs;
 theta=[param(1),param(2)];
 a=[param(3),param(4)];
 beta=param(5);
-sigmaobs2=param(6);
+sigmaobs2=param(6);             % observation variance
 
 % computation of residuals
 strmsim=hydrograph(theta,GLOBAL_DATA,GEOMORPH);
@@ -37,11 +37,11 @@ C = diag(a);
 % computation of total-error covariance matrix
 Ct=CovarianceMatrixEstimation(C,theta,sigmaobs2,GLOBAL_DATA,GEOMORPH);
 n=length(err); % number of components in err-vector
-fac=n*gamma(n/(2/beta))/(2^(1/beta)*gamma((n+2)/2/beta));
+log_fac=log(n)+log(gamma(n/2/beta))-(1/beta)*log(2)-log(gamma((n+2)/2/beta));
 sigma=Ct;
 log_k=log(n)+log(gamma(n/2))-(n/2)*log(pi)-log(gamma(1+(n/2/beta)))-(1+(n/2/beta))*log(2);
 sigma=sigma(1:n,1:n);
 sigmadet=det(sigma);
-L=-log_k+0.5*log(sigmadet)+0.5*log(fac)+0.5*(err'*(sigma\err))^(beta);
+L=-log_k+0.5*log(sigmadet)+0.5*n*log_fac+0.5*(err'*(sigma\err))^(beta);
 
 end
