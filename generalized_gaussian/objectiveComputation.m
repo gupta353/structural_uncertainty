@@ -42,6 +42,15 @@ sigma=Ct;
 log_k=log(n)+log(gamma(n/2))-(n/2)*log(pi)-log(gamma(1+(n/2/beta)))-(1+(n/2/beta))*log(2);
 sigma=sigma(1:n,1:n);
 sigmadet=det(sigma);
-L=-log_k+0.5*log(sigmadet)+0.5*n*log_fac+0.5*(err'*(sigma\err))^(beta);
+sigmadet_10=det(sigma*10);
+sigmadet_100=det(sigma*100);
+
+if sigmadet~=0 && sigmadet~=inf
+    L=-log_k+0.5*log(sigmadet)+0.5*n*log_fac+0.5*(err'*(sigma\err))^beta;
+elseif sigmadet_10~=0 && sigmadet_10~=inf
+    L=-log_k+0.5*(log(sigmadet_10)-n*log(10))+0.5*n*log_fac+0.5*(err'*(sigma\err))^beta;
+elseif sigmadet_100~=0 && sigmadet_100~=inf
+    L=-log_k+0.5*(log(sigmadet_100)-n*log(100))+0.5*n*log_fac+0.5*(err'*(sigma\err))^beta;
+end
 
 end
