@@ -67,16 +67,15 @@ vel_hillslope=0.5;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 
 numPaths=size(wt,1);                % compute # of paths from watershed-topology matrix
-numLinks=sum(wt,2);                 % compute # of links in each path from watershed-topology matrix
 RTD='exponential';                  % residence-time distribution (RTD)
-numNodes=numLinks;                  % # of nodes in each path
-totnumNodes=sum(numLinks)+1;        % total # of nodes
+pathPoints=cell(numPaths,1);
 for pathind=1:numPaths
     pathPoints{pathind}=...         % link indices in each path
         find(wt(pathind,:)==1);
 end
 pathPoints=pathPoints';
 
+linkPaths=cell(size(wt,2),1);
 for linkind=1:size(wt,2)
     linkPaths{linkind}=...         % paths common to each link
         find(wt(:,linkind)==1);
@@ -88,9 +87,9 @@ wt_err(wt_err==1)=0;
 sum_err=sum(wt(:,1:end-1),1);
 sum_err(sum_err<numPaths)=0;
 num_unique_paths=size(unique(wt,'rows'),1);
-if ~isempty(find(wt_err))
+if ~isempty(find(wt_err,1))
     error('atleast one of the entries in wt matrix is neither zero nor one');
-elseif ~isempty(find(sum_err))
+elseif ~isempty(find(sum_err,1))
     error(['atleast one of the links except the most downstreamis common' ...
     'to all the paths which is physically impossible']);
 elseif num_unique_paths<numPaths
@@ -98,7 +97,12 @@ elseif num_unique_paths<numPaths
 end
 %% tree structure (output variable=net)
 s=sum(wt,1);                         % number of paths shared by each link
-tempsum=numPaths;
+if sum(wt(:,end))==numPaths
+    tempsum=numPaths;
+else
+    tempsum=numPaths-1;
+end
+
 net=repmat({1:numPaths},numPaths,1);
 col_ind=ones(numPaths,1);
 
@@ -131,7 +135,7 @@ end
 %
 treedepth=size(net,2);
 node=0;
-[Au,idx,idx2]=uniquecell(net);
+[~,~,idx2]=uniquecell(net);
 idx2_res=reshape(idx2,size(net,1),size(net,2));
 for i=1:treedepth
     un=unique(idx2_res(:,i));
@@ -150,6 +154,7 @@ for i=2:treedepth
     end
 end
 max_node=max(node_net(:));
+
 for i=1:max_node
     [r,c]=find(node_net==i);
     nodes(i)=parents(r(1),c(1));
@@ -164,7 +169,11 @@ end
 %}
 %% link network (output_variable=link_net)
 %
-temp_net=net;
+if sum(wt(:,end))==numPaths
+    temp_net=net;
+else
+    temp_net=net(:,2:end);
+end
 temp_wt=wt;
 temp_treedepth=size(temp_net,2);
 link_net=size(wt,2)*ones(numPaths,1);
@@ -193,8 +202,8 @@ end
 %}
 %% define strahler order of links (output_variable=strahler_order)
 link_net_depth=size(link_net,2);
-ind=find(s==1);
-strahler_order(ind)=1;
+% ind=find(s==1);
+strahler_order(s==1)=1;
 for i=link_net_depth-1:-1:2         % last number should be 2 in one tempsum=numPaths (L76) and 1 in case tempsum=numPaths-1 (L76)
     uni_links=unique(link_net(:,i));
     
@@ -235,7 +244,7 @@ end
 max_order=max(strahler_order);
 length_num_mat=[(1:max_order)',...
     zeros(max_order,1),zeros(max_order,1)];
-links_used=[];
+
 for order=1:max_order
     links=find(strahler_order==order);                        % links of order 'order'
     
@@ -245,7 +254,7 @@ for order=1:max_order
     end
     
     while ~isempty(links)      
-        [max_int,ind]=max(numLinks_int);
+        [~,ind]=max(numLinks_int);
         links_curr_iter=link_path_int{ind};
         length_num_mat(order,3)=length_num_mat(order,3)...
             +sum(length_link(links_curr_iter));
@@ -293,6 +302,10 @@ max_node=max(node_net(:));
 filename=fullfile(save_dir,'links_draining_into_each_node.txt');
 fid=fopen(filename,'wt');
 fprintf(fid,'%s %s\n','node','links_draining');
+
+drain_area=zeros(max_node,1);
+links_node=cell(max_node,1);
+link_node_str=cell(max_node,1);
 for node=1:max_node
     [node_r,node_c]=find(node_net==node);
     links=link_net(node_r,node_c+1:treedepth);
