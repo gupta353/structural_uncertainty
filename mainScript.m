@@ -169,11 +169,7 @@ end
 %}
 %% link network (output_variable=link_net)
 %
-if sum(wt(:,end))==numPaths
-    temp_net=net;
-else
-    temp_net=net(:,2:end);
-end
+temp_net=net;
 temp_wt=wt;
 temp_treedepth=size(temp_net,2);
 link_net=size(wt,2)*ones(numPaths,1);
